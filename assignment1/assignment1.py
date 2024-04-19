@@ -2,7 +2,8 @@ import numpy as np
 import numpy.typing as npt
 from collections import defaultdict
 from os import fsencode, replace
-from typing import Hashable
+from typing import Hashable, Optional, Any, Union
+
 from glmnet import ElasticNet
 import time
 import pandas as pd
@@ -24,7 +25,7 @@ class Assignment1:
     _X: pd.DataFrame
     _y: npt.NDArray[np.float_]
 
-    _model: ElasticNet
+    _model: Optional[ElasticNet]
 
     def __init__(self, meta_filepath: str,
                  features_filepath: str):
@@ -32,23 +33,35 @@ class Assignment1:
         self._meta_filepath = meta_filepath
         self._features_filepath = features_filepath
 
-    def train(self, test_size=0.2, train_test_split_seed=42, train_seed=42):
+    def train(self,
+              X_train: Union[pd.DataFrame, np.ndarray],
+              y_train: np.ndarray,
+              cv_fold: int = 3,
+              parallel_jobs: int = 1,
+              test_size=0.2,
+              train_test_split_seed=42,
+              train_seed=42):
 
         # train test split
-        X_train, X_test, y_train, y_test = train_test_split(self._X,
-                                                            self._y,
-                                                            test_size=test_size,
-                                                            random_state=train_test_split_seed)
+        # X_train, X_test, y_train, y_test = train_test_split(self._X,
+        #                                                     self._y,
+        #                                                     test_size=test_size,
+        #                                                     random_state=train_test_split_seed)
 
-        print('X', X_train.shape, X_test.shape)
-        print('Y', y_train.shape, y_test.shape)
         
-        self._model = ElasticNet(n_jobs = 20, n_splits = 10, random_state=train_seed, verbose=True)
+        self._model = ElasticNet(n_jobs = parallel_jobs,
+                                 n_splits = cv_fold, random_state=train_seed, verbose=True)
         self._model.fit(X_train, y_train)
 
-        print(self._model.__dir__())
-
         return self._model
+
+    def predict(self, X: Union[pd.DataFrame, np.ndarray], lamb: Optional[float] = None):
+
+        assert self._model is not None, 'call train first'
+
+        y_pred = self._model.predict(X, lamb=lamb)
+
+        return y_pred
         
     def load(self):
 
@@ -67,9 +80,6 @@ class Assignment1:
         assert X.shape == (656, 473034)
         assert y.shape == (656, )
 
-        self._X = X
-        self._y = y
-        
         return X, y
 
     def _load_meta(self) -> pd.DataFrame:
