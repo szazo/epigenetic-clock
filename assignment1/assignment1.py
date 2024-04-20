@@ -68,11 +68,11 @@ class Assignment1:
         meta_df = self._load_meta()
         features_df = self._load_features()
 
-        # join based on the IDs (to match the order)
+        # join based on the IDs (to be sure)
         joined_df = meta_df.join(features_df)
         y: npt.NDArray[np.float_] = np.array(joined_df['age'].astype(float).values)
 
-        # drop the index and age fields from the joined
+        # drop the age field from the joined
         joined_df.drop('age', inplace=True, axis=1)
         X = joined_df
 
