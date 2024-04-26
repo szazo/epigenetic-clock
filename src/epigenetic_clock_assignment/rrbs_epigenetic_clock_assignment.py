@@ -5,9 +5,11 @@ from collections import defaultdict
 
 import numpy as np
 import numpy.typing as npt
+from sklearn.model_selection import train_test_split
 import dask.dataframe as dd
 import pandas as pd
 from glmnet import ElasticNet
+from .glmnet_epigenetic_clock_trainer import GlmNetEpigeneticClockTrainer
 
 
 class RRBSEpigeneticClockTrainer:
@@ -18,8 +20,7 @@ class RRBSEpigeneticClockTrainer:
     _features_csv_filepath: str
     _features_pickle_cache_filepath: str
 
-    def __init__(self, meta_csv_filepath: str,
-                 features_csv_filepath: str,
+    def __init__(self, meta_csv_filepath: str, features_csv_filepath: str,
                  features_pickle_cache_filepath: str):
 
         self._meta_csv_filepath = meta_csv_filepath
@@ -29,17 +30,19 @@ class RRBSEpigeneticClockTrainer:
         self._log = logging.getLogger(__class__.__name__)
         self._log.debug('__init__')
 
-    def predict(self, X: Union[pd.DataFrame, np.ndarray], lamb: Optional[float] = None):
+    def predict(self,
+                X: Union[pd.DataFrame, np.ndarray],
+                lamb: Optional[float] = None):
 
         assert self._model is not None, 'call train first'
 
         y_pred = self._model.predict(X, lamb=lamb)
 
         return y_pred
-        
+
     def train(self,
               X_train: Union[pd.DataFrame, np.ndarray],
-              y_train: np.ndarray,
+              y_train: Union[pd.Series, np.ndarray],
               cv_fold: int = 3,
               parallel_jobs: int = 1,
               test_size=0.2,
@@ -52,9 +55,10 @@ class RRBSEpigeneticClockTrainer:
         #                                                     test_size=test_size,
         #                                                     random_state=train_test_split_seed)
 
-        
-        self._model = ElasticNet(n_jobs = parallel_jobs,
-                                 n_splits = cv_fold, random_state=train_seed, verbose=True)
+        self._model = ElasticNet(n_jobs=parallel_jobs,
+                                 n_splits=cv_fold,
+                                 random_state=train_seed,
+                                 verbose=True)
         self._model.fit(X_train, y_train)
 
         return self._model
@@ -72,7 +76,8 @@ class RRBSEpigeneticClockTrainer:
         self._log.debug('joined; shape=%s', features_df.shape)
 
         self._log.debug('creating y')
-        y: npt.NDArray[np.float_] = np.array(features_df['Age (years)'].astype(float).values)
+        y: npt.NDArray[np.float_] = np.array(
+            features_df['Age (years)'].astype(float).values)
 
         # drop fields to create the X
         self._log.debug('creating X')
@@ -92,16 +97,19 @@ class RRBSEpigeneticClockTrainer:
 
     def _load_features(self):
 
-        if self._features_pickle_cache_filepath is not None and os.path.isfile(self._features_pickle_cache_filepath):
+        if self._features_pickle_cache_filepath is not None and os.path.isfile(
+                self._features_pickle_cache_filepath):
             # load using cache
-            self._log.debug('loading features from cache file "%s"...', self._features_pickle_cache_filepath)
+            self._log.debug('loading features from cache file "%s"...',
+                            self._features_pickle_cache_filepath)
             df = pd.read_pickle(self._features_pickle_cache_filepath)
             self._log.debug('loaded; shape=%s', df.shape)
             return df
 
         df = self._load_features_from_csv()
 
-        self._log.debug('saving features into cache file "%s"...', self._features_pickle_cache_filepath)
+        self._log.debug('saving features into cache file "%s"...',
+                        self._features_pickle_cache_filepath)
         df.to_pickle(self._features_pickle_cache_filepath)
         self._log.debug('cache created')
 
@@ -113,7 +121,8 @@ class RRBSEpigeneticClockTrainer:
         dtypes['Pos'] = str(pd.StringDtype(storage='pyarrow'))
 
         # load using dask
-        self._log.debug('loading "%s" using dask...', self._features_csv_filepath)
+        self._log.debug('loading "%s" using dask...',
+                        self._features_csv_filepath)
         dask_df = dd.read_csv(self._features_csv_filepath, dtype=dtypes)
 
         # set the 'Pos' field as index, after transpose it will be the column name

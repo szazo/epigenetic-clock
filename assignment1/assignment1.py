@@ -17,6 +17,7 @@ from sklearn.model_selection import train_test_split
 
 # print(meta_df)
 
+
 class Assignment1:
 
     _meta_filepath: str
@@ -27,20 +28,24 @@ class Assignment1:
 
     _model: Optional[ElasticNet]
 
-    def __init__(self, meta_filepath: str,
-                 features_filepath: str):
+    def __init__(self, meta_filepath: str, features_filepath: str):
 
         self._meta_filepath = meta_filepath
         self._features_filepath = features_filepath
 
-    def train(self,
-              X_train: Union[pd.DataFrame, np.ndarray],
-              y_train: np.ndarray,
-              cv_fold: int = 3,
-              parallel_jobs: int = 1,
-              test_size=0.2,
-              train_test_split_seed=42,
-              train_seed=42):
+    def train(
+        self,
+        X_train: Union[pd.DataFrame, np.ndarray],
+        y_train: np.ndarray,
+        std_error_weight_for_lambda_best:
+        float,  # the weight of standard error used to determine lambda_best, 0 means use lambda_max
+        cv_fold: int = 3,
+        n_lambda: int = 60,
+        parallel_jobs: int = 1,
+        test_size=0.2,
+        train_test_split_seed=42,
+        train_seed=42,
+    ):
 
         # train test split
         # X_train, X_test, y_train, y_test = train_test_split(self._X,
@@ -48,21 +53,26 @@ class Assignment1:
         #                                                     test_size=test_size,
         #                                                     random_state=train_test_split_seed)
 
-        
-        self._model = ElasticNet(n_jobs = parallel_jobs,
-                                 n_splits = cv_fold, random_state=train_seed, verbose=True)
+        self._model = ElasticNet(n_jobs=parallel_jobs,
+                                 n_lambda=n_lambda,
+                                 n_splits=cv_fold,
+                                 random_state=train_seed,
+                                 verbose=True,
+                                 cut_point=std_error_weight_for_lambda_best)
         self._model.fit(X_train, y_train)
 
         return self._model
 
-    def predict(self, X: Union[pd.DataFrame, np.ndarray], lamb: Optional[float] = None):
+    def predict(self,
+                X: Union[pd.DataFrame, np.ndarray],
+                lamb: Optional[float] = None):
 
         assert self._model is not None, 'call train first'
 
         y_pred = self._model.predict(X, lamb=lamb)
 
         return y_pred
-        
+
     def load(self):
 
         meta_df = self._load_meta()
@@ -70,7 +80,8 @@ class Assignment1:
 
         # join based on the IDs (to be sure)
         joined_df = meta_df.join(features_df)
-        y: npt.NDArray[np.float_] = np.array(joined_df['age'].astype(float).values)
+        y: npt.NDArray[np.float_] = np.array(
+            joined_df['age'].astype(float).values)
 
         # drop the age field from the joined
         joined_df.drop('age', inplace=True, axis=1)
@@ -90,7 +101,7 @@ class Assignment1:
 
         meta_df = meta_df[['source_name', 'age (y)']]
         meta_df = meta_df.rename(columns={'age (y)': 'age'})
-        
+
         # set it as index
         meta_df = meta_df.set_index('source_name')
 
@@ -99,11 +110,17 @@ class Assignment1:
     def _load_features(self) -> pd.DataFrame:
 
         # load sample rows to create dtype mapping
-        sample_feature_df = pd.read_csv(self._features_filepath, delimiter='\t', nrows=10, index_col=0)
+        sample_feature_df = pd.read_csv(self._features_filepath,
+                                        delimiter='\t',
+                                        nrows=10,
+                                        index_col=0)
         dtype_dict = self._map_column_types(sample_feature_df)
 
         # load the whole data
-        feature_df = pd.read_csv(self._features_filepath, delimiter='\t', index_col=0, dtype=dtype_dict)
+        feature_df = pd.read_csv(self._features_filepath,
+                                 delimiter='\t',
+                                 index_col=0,
+                                 dtype=dtype_dict)
 
         # reset the index name (because it is the index for the CpG sites)
         feature_df.index.rename(None, inplace=True)
@@ -148,7 +165,6 @@ class Assignment1:
 # print(sample_feature_df)
 # dtype_dict = process_column_types(sample_feature_df)
 # #print('dict', dtype_dict)
-
 
 # # load the features with the specified types
 # print('loading....')
