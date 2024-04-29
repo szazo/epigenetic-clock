@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from typing import Optional, Union, Tuple
 from functools import partial
 from collections import defaultdict
+from matplotlib import lines
 import matplotlib.pyplot as plt
+from pandas._config import config
+import scipy
 import seaborn as sns
 
 import numpy as np
@@ -14,6 +17,7 @@ from sklearn.model_selection import train_test_split
 # from sklearn.metrics import median_absolute_error, r2_score
 import scipy.stats as stats
 import sklearn.metrics as metrics
+import statsmodels.api as sm
 
 import dask.dataframe as dd
 import pandas as pd
@@ -39,6 +43,16 @@ class HyperParameterOptimizationResult:
     lambd: float
     r2_mean: float
     r2_std: float
+
+
+@dataclass
+class Statistics:
+    r2: float
+    slope: float
+    intercept: float
+    p_value: float
+    standard_error: float
+    medae: float
 
 
 class GlmNetEpigeneticClockTrainer:
@@ -123,24 +137,55 @@ class GlmNetEpigeneticClockTrainer:
 
         return result, hyperparameter_stats, best_model
 
-    def calculate_statistics(self, y_true: Union[pd.Series, np.ndarray],
-                             y_pred: Union[pd.Series, np.ndarray]):
+    def calculate_statistics(
+            self, y_true: Union[pd.Series, np.ndarray],
+            y_pred: Union[pd.Series, np.ndarray]) -> Statistics:
 
         medae = metrics.median_absolute_error(y_true=y_true, y_pred=y_pred)
-        r2 = metrics.r2_score(y_true=y_true, y_pred=y_pred)
 
         # linear regression statistics
-        linregress_result = stats.linregress(x=y_true, y=y_pred)
+        slope, intercept, r, p, se = stats.linregress(x=y_true, y=y_pred)
+        r2 = r**2
 
-    def plot_linear_regression_result(self, y_test: Union[pd.Series,
-                                                          np.ndarray],
-                                      y_pred: Union[pd.Series, np.ndarray]):
+        # stat models
+        # sm_y_true_with_constant = sm.add_constant(y_true)
+        # sm_model = sm.OLS(y_pred, sm_y_true_with_constant).fit()
+        # print(sm_model.summary())
 
-        sns.regplot(x=y_test, y=y_pred, ci=99, label='alma', n_boot=5000).set(
-            title=
-            f'Test set ($n={np.shape(X_test)[0]}$), $\\alpha={model.alpha:.2f}$, $\lambda={lamb:.2f}$, $R^2={r2:.2f}$, stderr={standard_error:.2f}, p={p_value} $MedAE={medae:.2f}$; \n(uncertainty bar for confidence interval of 95%)',
-            xlabel='Age (years)',
-            ylabel='DNAm age (years)')
+        result = Statistics(r2=r2,
+                            slope=slope,
+                            intercept=intercept,
+                            p_value=p,
+                            standard_error=se,
+                            medae=medae)
+        return result
+
+    def plot_linear_regression_result(self,
+                                      y_true: Union[pd.Series, np.ndarray],
+                                      y_pred: Union[pd.Series, np.ndarray],
+                                      stats: Statistics,
+                                      alpha: float,
+                                      lamb: float,
+                                      confidence_interval: int = 99,
+                                      n_boots: int = 5000):
+
+        alpha_sigfig = sigfig.round(alpha, sigfigs=1)
+        lambda_sigfig = sigfig.round(lamb, sigfigs=3)
+        r2_sigfig = sigfig.round(stats.r2, sigfigs=3)
+        std_err_sigfig = sigfig.round(stats.standard_error, sigfigs=3)
+        p_sigfig = sigfig.round(stats.p_value, sigfigs=2)
+        medae_sigfig = sigfig.round(stats.medae, sigfigs=3)
+
+        title = f'Test set ($n={np.shape(y_true)[0]}$), $\\alpha={alpha_sigfig}$, ' + \
+            f' $\\lambda={lambda_sigfig}$, $R^2={r2_sigfig}$, ' + \
+            f'stderr={std_err_sigfig}, p={p_sigfig} ' + \
+            f'$MedAE={medae_sigfig}$; ' + \
+            f'\n(uncertainty bar for confidence interval of {confidence_interval}%)'
+
+        sns.regplot(x=y_pred, y=y_true, ci=confidence_interval,
+                    n_boot=n_boots).set(title=title,
+                                        xlabel='Age (years)',
+                                        ylabel='DNAm age (years)')
         plt.show()
 
         pass
