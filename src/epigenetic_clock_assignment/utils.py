@@ -14,10 +14,15 @@ def download_file(url: str,
     if not os.path.exists(out_filepath):
         log.debug(f'file {out_filepath} does not exists; downloading...')
 
-        if intermediate_gzip_filepath is not None and os.path.exists(
-                intermediate_gzip_filepath):
-            # delete before download
-            os.remove(intermediate_gzip_filepath)
+        os.makedirs(os.path.dirname(out_filepath), exist_ok=True)
+
+        if intermediate_gzip_filepath is not None:
+
+            if os.path.exists(intermediate_gzip_filepath):
+                # delete before download
+                os.remove(intermediate_gzip_filepath)
+            os.makedirs(os.path.dirname(intermediate_gzip_filepath),
+                        exist_ok=True)
 
         wget.download(url=url, out=intermediate_gzip_filepath or out_filepath)
 

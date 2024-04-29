@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 # from sklearn.metrics import median_absolute_error, r2_score
 import scipy.stats as stats
 import sklearn.metrics as metrics
-import statsmodels.api as sm
+# import statsmodels.api as sm
 
 import dask.dataframe as dd
 import pandas as pd

@@ -24,6 +24,10 @@
     ```bash
     pre-commit install
     ```
+4. Install python environment as Jupyter kernel
+   ```bash
+   python -m ipykernel install --user --name=bio
+   ```
    
 # Other goodies
 
