@@ -3,10 +3,8 @@ import pandas as pd
 import numpy as np
 import numpy.typing as npt
 
-from .glmnet_epigenetic_clock_trainer import GlmNetEpigeneticClockTrainer
 
-
-class Assignment1MicroarrayEpigeneticClock:
+class Assignment1MicroarrayDataSource:
 
     _log: logging.Logger
 
