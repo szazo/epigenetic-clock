@@ -104,8 +104,9 @@ class GlmNetEpigeneticClockTrainer:
         # select best row based on r2_mean and self._std_error_weight_for_lambda_best * r2_std
         best_index = np.argmax(hyperparameter_stats['cv_r2_mean'] -
                                self._std_error_weight_for_lambda_best *
-                               hyperparameter_stats['cv_r2_mean'])
+                               hyperparameter_stats['cv_r2_std'])
         best_row = hyperparameter_stats.iloc[best_index]
+        print('STATS', hyperparameter_stats)
 
         result = HyperParameterOptimizationResult(
             alpha=best_row['alpha'],
@@ -148,6 +149,8 @@ class GlmNetEpigeneticClockTrainer:
                                       confidence_interval: int = 99,
                                       n_boots: int = 5000):
 
+        fig, ax = plt.figure(), plt.gca()
+
         alpha_sigfig = sigfig.round(alpha, sigfigs=1)
         lambda_sigfig = sigfig.round(lamb, sigfigs=3)
         r2_sigfig = sigfig.round(stats.r2, sigfigs=3)
@@ -161,10 +164,23 @@ class GlmNetEpigeneticClockTrainer:
             f'$MedAE={medae_sigfig}$; ' + \
             f'\n(uncertainty bar for confidence interval of {confidence_interval}%)'
 
-        sns.regplot(x=y_pred, y=y_true, ci=confidence_interval,
-                    n_boot=n_boots).set(title=title,
-                                        xlabel='Age (years)',
-                                        ylabel='DNAm age (years)')
+        sns.regplot(x=y_true,
+                    y=y_pred,
+                    ci=confidence_interval,
+                    fit_reg=True,
+                    n_boot=n_boots,
+                    ax=ax).set(title=title,
+                               xlabel='Age (years)',
+                               ylabel='DNAm age (years)')
+
+        regression_line_y = y_true * stats.slope + stats.intercept
+
+        sns.lineplot(x=y_true,
+                     y=regression_line_y,
+                     ax=ax,
+                     label='regression line')
+        sns.lineplot(x=y_true, y=y_true, ax=ax, label='x=y')
+
         plt.show()
 
     def plot_hyperparameter_optimization_result(
