@@ -45,8 +45,6 @@ class RRBSEpigeneticClockTrainer:
               y_train: Union[pd.Series, np.ndarray],
               cv_fold: int = 3,
               parallel_jobs: int = 1,
-              test_size=0.2,
-              train_test_split_seed=42,
               train_seed=42):
 
         # train test split
