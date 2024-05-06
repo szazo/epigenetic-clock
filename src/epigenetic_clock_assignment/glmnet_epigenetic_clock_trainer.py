@@ -22,6 +22,7 @@ class HyperParameterOptimizationResult:
     lambd: float
     r2_mean: float
     r2_std: float
+    nonzero_coefficient_count: int
 
 
 @dataclass
@@ -95,6 +96,9 @@ class GlmNetEpigeneticClockTrainer:
             train_stats['cv_r2_mean'] = model.cv_mean_score_
             train_stats['cv_r2_std'] = model.cv_standard_error_
             train_stats['model_index'] = index
+            train_stats[
+                'nonzero_coefficient_count'] = self._count_nonzero_coefficients(
+                    model)
 
             hyperparameter_stats = pd.concat(
                 (hyperparameter_stats, train_stats))
@@ -106,15 +110,15 @@ class GlmNetEpigeneticClockTrainer:
                                self._std_error_weight_for_lambda_best *
                                hyperparameter_stats['cv_r2_std'])
         best_row = hyperparameter_stats.iloc[best_index]
-        print('STATS', hyperparameter_stats)
 
         result = HyperParameterOptimizationResult(
             alpha=best_row['alpha'],
             lambd=best_row['lambda'],
             r2_mean=best_row['cv_r2_mean'],
-            r2_std=best_row['cv_r2_std'])
-        best_model = models[int(best_row['model_index'])]
+            r2_std=best_row['cv_r2_std'],
+            nonzero_coefficient_count=best_row['nonzero_coefficient_count'])
 
+        best_model = models[int(best_row['model_index'])]
         return result, hyperparameter_stats, best_model
 
     def calculate_statistics(
@@ -140,6 +144,16 @@ class GlmNetEpigeneticClockTrainer:
                             medae=medae)
         return result
 
+    def _count_nonzero_coefficients(self, model: ElasticNet):
+
+        coefs: npt.NDArray[np.float_] = np.array(model.coef_)
+        atol = float(np.finfo(coefs.dtype).tiny)
+        is_close_to_zero = np.isclose(coefs, 0, atol=atol, rtol=0)
+
+        nonzero_count = np.count_nonzero(np.invert(is_close_to_zero))
+
+        return nonzero_count
+
     def plot_linear_regression_result(self,
                                       y_true: Union[pd.Series, np.ndarray],
                                       y_pred: Union[pd.Series, np.ndarray],
@@ -164,14 +178,23 @@ class GlmNetEpigeneticClockTrainer:
             f'$MedAE={medae_sigfig}$; ' + \
             f'\n(uncertainty bar for confidence interval of {confidence_interval}%)'
 
-        sns.regplot(x=y_true,
-                    y=y_pred,
-                    ci=confidence_interval,
-                    fit_reg=True,
-                    n_boot=n_boots,
-                    ax=ax).set(title=title,
-                               xlabel='Age (years)',
-                               ylabel='DNAm age (years)')
+        sns.scatterplot(x=y_true, y=y_pred, ax=ax)
+
+        #.set(title=title,
+        #                       xlabel='Age (years)',
+        #                       ylabel='DNAm age (years)')
+
+        ax.set_title(title)
+        ax.set_xlabel('Age (years)')
+        ax.set_ylabel('DNAm age (years)')
+        # sns.regplot(x=y_true,
+        #             y=y_pred,
+        #             ci=confidence_interval,
+        #             fit_reg=True,
+        #             n_boot=n_boots,
+        #             ax=ax).set(title=title,
+        #                        xlabel='Age (years)',
+        #                        ylabel='DNAm age (years)')
 
         regression_line_y = y_true * stats.slope + stats.intercept
 
@@ -221,7 +244,7 @@ class GlmNetEpigeneticClockTrainer:
                                           sigfigs=4)
 
         ax.annotate(
-            f'$\\lambda={best_lambda_sigfig},\\alpha={best_alpha_sigfig},CV\\ R^2\\ mean={best_r2_mean_sigfig}, CV\\ R^2\\ std={best_r2_std_sigfig}$',
+            f'$\\lambda={best_lambda_sigfig},\\alpha={best_alpha_sigfig},CV\\ R^2\\ mean={best_r2_mean_sigfig}, CV\\ R^2\\ std={best_r2_std_sigfig},n\\_coefs={hyperparameter_result.nonzero_coefficient_count}$',
             xy=(np.log10(hyperparameter_result.lambd),
                 hyperparameter_result.alpha),
             xycoords='data',
