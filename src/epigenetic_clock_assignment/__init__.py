@@ -1,11 +1,12 @@
 # SPDX-FileCopyrightText: 2024-present Zoltán Szarvas <szazo@szazo.com>
 #
 # SPDX-License-Identifier: MIT
-from .glmnet_epigenetic_clock_trainer import GlmNetEpigeneticClockTrainer
-from .assignment1_microarray_epigenetic_clock import Assignment1MicroarrayEpigeneticClock
 from .utils import download_file
+from .glmnet_epigenetic_clock_trainer import GlmNetEpigeneticClockTrainer
+from .assignment1_microarray_datasource import Assignment1MicroarrayDataSource
+from .assignment2_rrbs_datasource import Assignment2RRBSDataSource
 
 __all__ = [
-    'Assignment1MicroarrayEpigeneticClock', 'GlmNetEpigeneticClockTrainer',
-    'download_file'
+    'Assignment1MicroarrayDataSource', 'GlmNetEpigeneticClockTrainer',
+    'Assignment2RRBSDataSource', 'download_file'
 ]
