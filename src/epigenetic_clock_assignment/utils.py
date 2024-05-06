@@ -5,6 +5,26 @@ import wget
 import gzip
 import zipfile
 import shutil
+import owncloud
+
+
+def download_nextcloud_file(folder_url: str,
+                            filename: str,
+                            out_filepath: str,
+                            password: str = ''):
+    log = logging.getLogger('download_nextcloud_file')
+
+    if os.path.exists(out_filepath):
+        log.debug(f'file {out_filepath} already exists; do not download again')
+        return
+
+    log.debug('downloading file "%s" from folder url "%s"', filename,
+              folder_url)
+
+    oc = owncloud.Client.from_public_link(folder_url, folder_password=password)
+    oc.get_file(filename, local_file=out_filepath)
+
+    log.debug('downloaded to "%s"', out_filepath)
 
 
 def download_file(url: str,
