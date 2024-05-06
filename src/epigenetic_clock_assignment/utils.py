@@ -18,6 +18,10 @@ def download_nextcloud_file(folder_url: str,
         log.debug(f'file {out_filepath} already exists; do not download again')
         return
 
+    out_dir = os.path.dirname(out_filepath)
+    log.debug(f'creating directory "{out_dir}" if does not exists...')
+    os.makedirs(out_dir, exist_ok=True)
+
     log.debug('downloading file "%s" from folder url "%s"', filename,
               folder_url)
 
