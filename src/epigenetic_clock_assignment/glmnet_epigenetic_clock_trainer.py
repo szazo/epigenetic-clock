@@ -1,40 +1,19 @@
-import os
 import logging
 from dataclasses import dataclass
 from typing import Optional, Union, Tuple
 from functools import partial
-from collections import defaultdict
-from matplotlib import lines
 import matplotlib.pyplot as plt
-from pandas._config import config
-import scipy
 import seaborn as sns
 
 import numpy as np
 import numpy.typing as npt
 import sigfig
 from sklearn.model_selection import train_test_split
-# from sklearn.metrics import median_absolute_error, r2_score
 import scipy.stats as stats
 import sklearn.metrics as metrics
-# import statsmodels.api as sm
 
-import dask.dataframe as dd
 import pandas as pd
 from glmnet import ElasticNet
-
-
-@dataclass
-class ModelTrainResults:
-    lambda_best: float
-    lambda_best_nonzero_coef_count: int
-    lambda_best_index: int
-    alpha: float
-
-    # informations about all lambdas
-    lambda_path: npt.NDArray[np.float_]
-    lambda_cv_score_mean: npt.NDArray[np.float_]
-    lambda_cv_score_std: npt.NDArray[np.float_]
 
 
 @dataclass
@@ -188,11 +167,11 @@ class GlmNetEpigeneticClockTrainer:
                                         ylabel='DNAm age (years)')
         plt.show()
 
-        pass
-
     def plot_hyperparameter_optimization_result(
-            self, hyperparameter_result: HyperParameterOptimizationResult,
-            hyperparameter_stats: pd.DataFrame):
+        self,
+        hyperparameter_result: HyperParameterOptimizationResult,
+        hyperparameter_stats: pd.DataFrame,
+        arrow_xytext_offset=(-100, -50)):
 
         sns.set_theme()
 
@@ -226,11 +205,11 @@ class GlmNetEpigeneticClockTrainer:
                                           sigfigs=4)
 
         ax.annotate(
-            f'$\lambda={best_lambda_sigfig},\\alpha={best_alpha_sigfig},CV\\ R^2\\ mean={best_r2_mean_sigfig}, CV\\ R^2\\ std={best_r2_std_sigfig}$',
+            f'$\\lambda={best_lambda_sigfig},\\alpha={best_alpha_sigfig},CV\\ R^2\\ mean={best_r2_mean_sigfig}, CV\\ R^2\\ std={best_r2_std_sigfig}$',
             xy=(np.log10(hyperparameter_result.lambd),
                 hyperparameter_result.alpha),
             xycoords='data',
-            xytext=(-100, -30),
+            xytext=arrow_xytext_offset,
             textcoords='offset points',
             arrowprops=dict(arrowstyle='->',
                             connectionstyle='arc3',
