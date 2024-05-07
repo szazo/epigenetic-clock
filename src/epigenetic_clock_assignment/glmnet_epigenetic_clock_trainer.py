@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional, Union, Tuple
+from typing import Optional, Union, Tuple, List
 from functools import partial
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -33,6 +33,8 @@ class Statistics:
     p_value: float
     standard_error: float
     medae: float
+    delta_age: npt.NDArray[np.float_]
+    age_acceleration: npt.NDArray[np.float_]
 
 
 class GlmNetEpigeneticClockTrainer:
@@ -59,13 +61,14 @@ class GlmNetEpigeneticClockTrainer:
         self._std_error_weight_for_lambda_best = std_error_weight_for_lambda_best
         self._seed = seed
 
-    def train_test_split(self, X: Union[pd.DataFrame, np.ndarray],
-                         y: Union[pd.Series, np.ndarray], test_size: float):
+    def train_test_split(self, *arrays: List[Union[pd.DataFrame, np.ndarray]],
+                         test_size: float):
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=self._seed)
+        result = train_test_split(*arrays,
+                                  test_size=test_size,
+                                  random_state=self._seed)
 
-        return X_train, X_test, y_train, y_test
+        return result
 
     def hyperparameter_optimization(
         self,
@@ -136,12 +139,17 @@ class GlmNetEpigeneticClockTrainer:
         # sm_model = sm.OLS(y_pred, sm_y_true_with_constant).fit()
         # print(sm_model.summary())
 
+        delta_age = y_pred - y_true
+        age_acceleration = y_pred - (y_true * slope + intercept)
+
         result = Statistics(r2=r2,
                             slope=slope,
                             intercept=intercept,
                             p_value=p,
                             standard_error=se,
-                            medae=medae)
+                            medae=medae,
+                            delta_age=delta_age,
+                            age_acceleration=age_acceleration)
         return result
 
     def _count_nonzero_coefficients(self, model: ElasticNet):
@@ -154,14 +162,18 @@ class GlmNetEpigeneticClockTrainer:
 
         return nonzero_count
 
-    def plot_linear_regression_result(self,
-                                      y_true: Union[pd.Series, np.ndarray],
-                                      y_pred: Union[pd.Series, np.ndarray],
-                                      stats: Statistics,
-                                      alpha: float,
-                                      lamb: float,
-                                      confidence_interval: int = 99,
-                                      n_boots: int = 5000):
+    def plot_linear_regression_result(
+            self,
+            y_true: Union[pd.Series, np.ndarray],
+            y_pred: Union[pd.Series, np.ndarray],
+            stats: Statistics,
+            alpha: float,
+            lamb: float,
+            title_prefix: str,
+            confidence_interval: int = 99,
+            n_boots: int = 5000,
+            hue: Optional[Union[pd.Series, np.ndarray]] = None,
+            style: Optional[Union[pd.Series, np.ndarray]] = None):
 
         fig, ax = plt.figure(), plt.gca()
 
@@ -172,13 +184,13 @@ class GlmNetEpigeneticClockTrainer:
         p_sigfig = sigfig.round(stats.p_value, sigfigs=2)
         medae_sigfig = sigfig.round(stats.medae, sigfigs=3)
 
-        title = f'Test set ($n={np.shape(y_true)[0]}$), $\\alpha={alpha_sigfig}$, ' + \
+        title = f'{title_prefix} ($n={np.shape(y_true)[0]}$), $\\alpha={alpha_sigfig}$, ' + \
             f' $\\lambda={lambda_sigfig}$, $R^2={r2_sigfig}$, ' + \
             f'stderr={std_err_sigfig}, p={p_sigfig} ' + \
             f'$MedAE={medae_sigfig}$; ' + \
             f'\n(uncertainty bar for confidence interval of {confidence_interval}%)'
 
-        sns.scatterplot(x=y_true, y=y_pred, ax=ax)
+        sns.scatterplot(x=y_true, y=y_pred, ax=ax, hue=hue, style=style)
 
         #.set(title=title,
         #                       xlabel='Age (years)',

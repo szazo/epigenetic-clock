@@ -37,16 +37,16 @@ class Assignment2RRBSDataSource:
 
         # join based on the IDs (to be sure)
         self._log.debug('joining based on ID')
-        features_df = meta_df.join(features_df)
-        self._log.debug('joined; shape=%s', features_df.shape)
+        joined_df = meta_df.join(features_df)
+        self._log.debug('joined; shape=%s', joined_df.shape)
 
         self._log.debug('creating y')
         y: npt.NDArray[np.float_] = np.array(
-            features_df['Age (years)'].astype(float).values)
+            joined_df['Age (years)'].astype(float).values)
 
         # drop fields to create the X
         self._log.debug('creating X')
-        X = features_df.iloc[:, 3:]
+        X = joined_df.iloc[:, 3:]
 
         assert X.shape == (expected_instance_count,
                            expected_feature_count), 'X shape mismatch'
@@ -54,7 +54,9 @@ class Assignment2RRBSDataSource:
 
         self._log.debug('loaded')
 
-        return X, y
+        result_meta_df = joined_df[['Gender', 'Condition']]
+
+        return X, y, result_meta_df
 
     def _load_meta(self) -> pd.DataFrame:
         meta_df = pd.read_csv(self._meta_csv_filepath, index_col=0)
