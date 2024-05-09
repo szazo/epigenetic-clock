@@ -107,3 +107,49 @@ class Assignment2RRBSDataSource:
         self._log.debug('transposed; shape=%s', df.shape)
 
         return df
+
+    def load_features2(self) -> pd.DataFrame:
+
+        if self._features_pickle_cache_filepath is not None and os.path.isfile(
+                self._features_pickle_cache_filepath):
+            # load using cache
+            self._log.debug('loading features from cache file "%s"...',
+                            self._features_pickle_cache_filepath)
+            df = pd.read_pickle(self._features_pickle_cache_filepath)
+            self._log.debug('loaded; shape=%s', df.shape)
+            return df
+
+        df = self.load_features_from_csv2()
+
+        self._log.debug('saving features into cache file "%s"...',
+                        self._features_pickle_cache_filepath)
+        df.to_pickle(self._features_pickle_cache_filepath)
+        self._log.debug('cache created')
+
+        return df
+
+    def load_features_from_csv2(self):
+        # read floating point values as float32 and string 'Pos' field as pyarrow string
+        dtypes = defaultdict(lambda: 'float32')
+        dtypes['Pos'] = str(pd.StringDtype(storage='pyarrow'))
+
+        # load using dask
+        self._log.debug('loading "%s" using dask...',
+                        self._features_csv_filepath)
+        dask_df = dask_read_csv(self._features_csv_filepath, dtype=dtypes)
+
+        # set the 'Pos' field as index, after transpose it will be the column name
+        self._log.debug('setting "Pos" field as index...')
+        dask_df = dask_df.set_index('Pos')
+
+        #return dask_df
+        # convert to pandas dataframe
+        self._log.debug('converting to pandas dataframe...')
+        df = dask_df.compute()
+        self._log.debug('converted; shape=%s', df.shape)
+
+        # self._log.debug('transposing...')
+        # df = df.T
+        # self._log.debug('transposed; shape=%s', df.shape)
+
+        return df
