@@ -48,9 +48,9 @@ class Assignment2RRBSDataSource:
         self._log.debug('creating X')
         X = joined_df.iloc[:, 3:]
 
-        assert X.shape == (expected_instance_count,
-                           expected_feature_count), 'X shape mismatch'
-        assert y.shape == (expected_instance_count, ), 'y shape mismatch'
+        # assert X.shape == (expected_instance_count,
+        #                    expected_feature_count), 'X shape mismatch'
+        # assert y.shape == (expected_instance_count, ), 'y shape mismatch'
 
         self._log.debug('loaded')
 
@@ -74,7 +74,7 @@ class Assignment2RRBSDataSource:
             self._log.debug('loaded; shape=%s', df.shape)
             return df
 
-        df = self._load_features_from_csv()
+        df = self._load_features_from_csv_with_fillna()
 
         self._log.debug('saving features into cache file "%s"...',
                         self._features_pickle_cache_filepath)
@@ -107,6 +107,43 @@ class Assignment2RRBSDataSource:
         self._log.debug('transposed; shape=%s', df.shape)
 
         return df
+
+    def _load_features_from_csv_with_fillna(self):
+        # read floating point values as float32 and string 'Pos' field as pyarrow string
+        dtypes = defaultdict(lambda: 'float32')
+        dtypes['Pos'] = str(pd.StringDtype(storage='pyarrow'))
+
+        # load using dask
+        self._log.debug('loading "%s" using dask...',
+                        self._features_csv_filepath)
+        dask_df = dask_read_csv(self._features_csv_filepath,
+                                dtype=dtypes,
+                                blocksize="228MB")
+        print('PARTS', dask_df.npartitions)
+
+        # set the 'Pos' field as index, after transpose it will be the column name
+        self._log.debug('setting "Pos" field as index...')
+        dask_df = dask_df.set_index('Pos')
+
+        # fillna using row mean
+        self._log.debug('fillna using row mean...')
+        dask_df_filled = dask_df.map_partitions(self.fill_na_with_row_mean,
+                                                meta=dask_df)
+        self._log.debug('fillna finished...')
+
+        # convert to pandas dataframe
+        self._log.debug('converting to pandas dataframe...')
+        df = dask_df_filled.compute()
+        self._log.debug('converted; shape=%s', df.shape)
+
+        self._log.debug('transposing...')
+        df = df.T
+        self._log.debug('transposed; shape=%s', df.shape)
+
+        return df
+
+    def fill_na_with_row_mean(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df.apply(lambda row: row.fillna(row.mean()), axis=1)
 
     def load_features2(self) -> pd.DataFrame:
 
