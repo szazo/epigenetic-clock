@@ -145,6 +145,9 @@ class Assignment2RRBSDataSource:
     def fill_na_with_row_mean(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.apply(lambda row: row.fillna(row.mean()), axis=1)
 
+    def fill_na_with_row_median(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df.apply(lambda row: row.fillna(row.median()), axis=1)
+
     def load_features2(self) -> pd.DataFrame:
 
         if self._features_pickle_cache_filepath is not None and os.path.isfile(
