@@ -124,7 +124,7 @@ class Assignment2RRBSDataSource:
 
         # fillna using row mean
         self._log.debug('fillna using row mean...')
-        dask_df_filled = dask_df.map_partitions(self.fill_na_with_row_median,
+        dask_df_filled = dask_df.map_partitions(self.fill_na_with_row_mean,
                                                 meta=dask_df)
         self._log.debug('fillna finished...')
 
