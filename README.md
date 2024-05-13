@@ -1,17 +1,15 @@
-# Assignment for Bioinformatics aspects of aging and rejuvenation
+# Epigenetic clock assignments for "Bioinformatics aspects of aging and rejuvenation" lecture
 
-## Task info
-
-Epigenetic clock assignments for *Bioinformatics aspects of aging and rejuvenation* lecture.
+## Info
 
 Lecturer: [Csaba Kerepesi](https://kerepesi.web.elte.hu/)
 
 * Assignment1: Train epigenetic clock for microarray-based methylation dataset
 * Assignment2: Train epigenetic clock for RRBS-based methylation dataset (with missing data)
 
-## Setup
+## Development
 
-## Creating and activating virtual env
+### Creating and activating virtual env
 
 1. Create a *virtual env* which uses Python 3.9 (**replace** `VENV_DIR` e.g. to `~/.envs/bio`):
     ```bash
@@ -24,7 +22,7 @@ Lecturer: [Csaba Kerepesi](https://kerepesi.web.elte.hu/)
     source VENV_DIR/bin/activate
     ```
     
-## Initialize the project for development
+### Initialize the project for development
 
 1. Enter into **project root**
 2. Start developing with **editable** (or **develop**) mode:
@@ -39,8 +37,13 @@ Lecturer: [Csaba Kerepesi](https://kerepesi.web.elte.hu/)
    ```bash
    python -m ipykernel install --user --name=bio
    ```
-   
-# Other goodies
+
+### Running
+
+Run the jupyter notebooks using `bio` kernel.
+
+
+### Other goodies
 
 ## Tips for development
 
