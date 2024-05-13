@@ -94,14 +94,24 @@ class GlmNetEpigeneticClockTrainer:
             model.fit(X_train, y_train)
 
             train_stats = pd.DataFrame()
-            train_stats['lambda'] = model.lambda_path_
+            # paths used only for plotting
+            train_stats['lambda_path'] = model.lambda_path_
+            train_stats['cv_r2_mean_path'] = model.cv_mean_score_
+            train_stats['cv_r2_std_path'] = model.cv_standard_error_
+            # single parameters
+            train_stats['lambda'] = model.lambda_best_[
+                0]  #3. #model.lambda_path_
             train_stats['alpha'] = alpha
-            train_stats['cv_r2_mean'] = model.cv_mean_score_
-            train_stats['cv_r2_std'] = model.cv_standard_error_
+            train_stats['cv_r2_mean'] = model.cv_mean_score_[
+                model.lambda_best_inx_][0]
+            train_stats['cv_r2_std'] = model.cv_standard_error_[
+                model.lambda_best_inx_][0]
             train_stats['model_index'] = index
             train_stats[
                 'nonzero_coefficient_count'] = self._count_nonzero_coefficients(
                     model)
+
+            print('STATS', train_stats)
 
             hyperparameter_stats = pd.concat(
                 (hyperparameter_stats, train_stats))
@@ -109,9 +119,11 @@ class GlmNetEpigeneticClockTrainer:
             models.append(model)
 
         # select best row based on r2_mean and self._std_error_weight_for_lambda_best * r2_std
+        # note: the first is enough, because the dataframe also contains lambda_path
         best_index = np.argmax(hyperparameter_stats['cv_r2_mean'] -
                                self._std_error_weight_for_lambda_best *
                                hyperparameter_stats['cv_r2_std'])
+        print(best_index)
         best_row = hyperparameter_stats.iloc[best_index]
 
         result = HyperParameterOptimizationResult(
@@ -170,12 +182,11 @@ class GlmNetEpigeneticClockTrainer:
             alpha: float,
             lamb: float,
             title_prefix: str,
-            confidence_interval: int = 99,
-            n_boots: int = 5000,
             hue: Optional[Union[pd.Series, np.ndarray]] = None,
             style: Optional[Union[pd.Series, np.ndarray]] = None):
 
-        fig, ax = plt.figure(), plt.gca()
+        fig, ax = plt.figure(figsize=(14, 8)), plt.gca()
+        ax.set_aspect('equal', adjustable='box')
 
         alpha_sigfig = sigfig.round(alpha, sigfigs=1)
         lambda_sigfig = sigfig.round(lamb, sigfigs=3)
@@ -184,11 +195,10 @@ class GlmNetEpigeneticClockTrainer:
         p_sigfig = sigfig.round(stats.p_value, sigfigs=2)
         medae_sigfig = sigfig.round(stats.medae, sigfigs=3)
 
-        title = f'{title_prefix} ($n={np.shape(y_true)[0]}$), $\\alpha={alpha_sigfig}$, ' + \
-            f' $\\lambda={lambda_sigfig}$, $R^2={r2_sigfig}$, ' + \
+        title = f'{title_prefix} ($n={np.shape(y_true)[0]}$); $\\alpha={alpha_sigfig}$, ' + \
+            f' $\\lambda={lambda_sigfig}$\n$R^2={r2_sigfig}$, ' + \
             f'stderr={std_err_sigfig}, p={p_sigfig} ' + \
-            f'$MedAE={medae_sigfig}$; ' + \
-            f'\n(uncertainty bar for confidence interval of {confidence_interval}%)'
+            f'$MedAE={medae_sigfig}$'
 
         sns.scatterplot(x=y_true, y=y_pred, ax=ax, hue=hue, style=style)
 
@@ -196,9 +206,9 @@ class GlmNetEpigeneticClockTrainer:
         #                       xlabel='Age (years)',
         #                       ylabel='DNAm age (years)')
 
-        ax.set_title(title)
-        ax.set_xlabel('Age (years)')
-        ax.set_ylabel('DNAm age (years)')
+        ax.set_title(title, fontsize=18)
+        ax.set_xlabel('Age (years)', fontsize=14)
+        ax.set_ylabel('DNAm age (years)', fontsize=14)
         # sns.regplot(x=y_true,
         #             y=y_pred,
         #             ci=confidence_interval,
@@ -226,12 +236,12 @@ class GlmNetEpigeneticClockTrainer:
 
         sns.set_theme()
 
-        fig, ax = plt.figure(figsize=(15, 5)), plt.gca()
+        fig, ax = plt.figure(figsize=(14, 8)), plt.gca()
 
-        sns.scatterplot(x=np.log10(hyperparameter_stats['lambda']),
+        sns.scatterplot(x=np.log10(hyperparameter_stats['lambda_path']),
                         y=hyperparameter_stats['alpha'],
-                        hue=hyperparameter_stats['cv_r2_mean'],
-                        size=hyperparameter_stats['cv_r2_std'],
+                        hue=hyperparameter_stats['cv_r2_mean_path'],
+                        size=hyperparameter_stats['cv_r2_std_path'],
                         sizes=(10, 250),
                         ax=ax,
                         legend='brief')

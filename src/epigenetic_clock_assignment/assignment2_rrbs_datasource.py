@@ -28,7 +28,7 @@ class Assignment2RRBSDataSource:
 
     def load(self,
              expected_instance_count=182,
-             expected_feature_count=5201794):
+             expected_feature_count=8722093):
 
         self._log.debug('load')
 
@@ -48,9 +48,9 @@ class Assignment2RRBSDataSource:
         self._log.debug('creating X')
         X = joined_df.iloc[:, 3:]
 
-        # assert X.shape == (expected_instance_count,
-        #                    expected_feature_count), 'X shape mismatch'
-        # assert y.shape == (expected_instance_count, ), 'y shape mismatch'
+        assert X.shape == (expected_instance_count,
+                           expected_feature_count), 'X shape mismatch'
+        assert y.shape == (expected_instance_count, ), 'y shape mismatch'
 
         self._log.debug('loaded')
 
@@ -116,10 +116,7 @@ class Assignment2RRBSDataSource:
         # load using dask
         self._log.debug('loading "%s" using dask...',
                         self._features_csv_filepath)
-        dask_df = dask_read_csv(self._features_csv_filepath,
-                                dtype=dtypes,
-                                blocksize="228MB")
-        print('PARTS', dask_df.npartitions)
+        dask_df = dask_read_csv(self._features_csv_filepath, dtype=dtypes)
 
         # set the 'Pos' field as index, after transpose it will be the column name
         self._log.debug('setting "Pos" field as index...')
@@ -148,98 +145,98 @@ class Assignment2RRBSDataSource:
     def fill_na_with_row_median(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.apply(lambda row: row.fillna(row.median()), axis=1)
 
-    def load_features2(self) -> pd.DataFrame:
+    # def load_features2(self) -> pd.DataFrame:
 
-        if self._features_pickle_cache_filepath is not None and os.path.isfile(
-                self._features_pickle_cache_filepath):
-            # load using cache
-            self._log.debug('loading features from cache file "%s"...',
-                            self._features_pickle_cache_filepath)
-            df = pd.read_pickle(self._features_pickle_cache_filepath)
-            self._log.debug('loaded; shape=%s', df.shape)
-            return df
+    #     if self._features_pickle_cache_filepath is not None and os.path.isfile(
+    #             self._features_pickle_cache_filepath):
+    #         # load using cache
+    #         self._log.debug('loading features from cache file "%s"...',
+    #                         self._features_pickle_cache_filepath)
+    #         df = pd.read_pickle(self._features_pickle_cache_filepath)
+    #         self._log.debug('loaded; shape=%s', df.shape)
+    #         return df
 
-        df = self.load_features_from_csv2()
+    #     df = self.load_features_from_csv2()
 
-        self._log.debug('saving features into cache file "%s"...',
-                        self._features_pickle_cache_filepath)
-        df.to_pickle(self._features_pickle_cache_filepath)
-        self._log.debug('cache created')
+    #     self._log.debug('saving features into cache file "%s"...',
+    #                     self._features_pickle_cache_filepath)
+    #     df.to_pickle(self._features_pickle_cache_filepath)
+    #     self._log.debug('cache created')
 
-        return df
+    #     return df
 
-    def load_features_from_csv2(self):
-        # read floating point values as float32 and string 'Pos' field as pyarrow string
-        dtypes = defaultdict(lambda: 'float32')
-        dtypes['Pos'] = str(pd.StringDtype(storage='pyarrow'))
+    # def load_features_from_csv2(self):
+    #     # read floating point values as float32 and string 'Pos' field as pyarrow string
+    #     dtypes = defaultdict(lambda: 'float32')
+    #     dtypes['Pos'] = str(pd.StringDtype(storage='pyarrow'))
 
-        # load using dask
-        self._log.debug('loading "%s" using dask...',
-                        self._features_csv_filepath)
+    #     # load using dask
+    #     self._log.debug('loading "%s" using dask...',
+    #                     self._features_csv_filepath)
 
-        dask_df = dask_read_csv(self._features_csv_filepath, dtype=dtypes)
+    #     dask_df = dask_read_csv(self._features_csv_filepath, dtype=dtypes)
 
-        # set the 'Pos' field as index, after transpose it will be the column name
-        self._log.debug('setting "Pos" field as index...')
-        dask_df = dask_df.set_index('Pos')
+    #     # set the 'Pos' field as index, after transpose it will be the column name
+    #     self._log.debug('setting "Pos" field as index...')
+    #     dask_df = dask_df.set_index('Pos')
 
-        #return dask_df
-        # convert to pandas dataframe
-        self._log.debug('converting to pandas dataframe...')
-        df = dask_df.compute()
-        self._log.debug('converted; shape=%s', df.shape)
+    #     #return dask_df
+    #     # convert to pandas dataframe
+    #     self._log.debug('converting to pandas dataframe...')
+    #     df = dask_df.compute()
+    #     self._log.debug('converted; shape=%s', df.shape)
 
-        # self._log.debug('transposing...')
-        # df = df.T
-        # self._log.debug('transposed; shape=%s', df.shape)
+    #     # self._log.debug('transposing...')
+    #     # df = df.T
+    #     # self._log.debug('transposed; shape=%s', df.shape)
 
-        return df
+    #     return df
 
-    def load_features_from_csv3(self):
-        # read floating point values as float32 and string 'Pos' field as pyarrow string
-        dtypes = defaultdict(lambda: 'float32')
-        dtypes['Pos'] = str(pd.StringDtype(storage='pyarrow'))
+    # def load_features_from_csv3(self):
+    #     # read floating point values as float32 and string 'Pos' field as pyarrow string
+    #     dtypes = defaultdict(lambda: 'float32')
+    #     dtypes['Pos'] = str(pd.StringDtype(storage='pyarrow'))
 
-        # load using dask
-        self._log.debug('loading "%s" using dask...',
-                        self._features_csv_filepath)
+    #     # load using dask
+    #     self._log.debug('loading "%s" using dask...',
+    #                     self._features_csv_filepath)
 
-        column_names = pd.read_csv(self._features_csv_filepath,
-                                   nrows=0).columns
-        types_dict = {'Pos': str(pd.StringDtype(storage='pyarrow'))}
-        float32_types_dict = {
-            column_name: 'float32'
-            for column_name in column_names if column_name not in types_dict
-        }
-        # types_dict.update(float32_types_dict)
-        # print(types_dict)
+    #     column_names = pd.read_csv(self._features_csv_filepath,
+    #                                nrows=0).columns
+    #     types_dict = {'Pos': str(pd.StringDtype(storage='pyarrow'))}
+    #     float32_types_dict = {
+    #         column_name: 'float32'
+    #         for column_name in column_names if column_name not in types_dict
+    #     }
+    #     # types_dict.update(float32_types_dict)
+    #     # print(types_dict)
 
-        df = pd.read_csv(self._features_csv_filepath, dtype=dtypes)
+    #     df = pd.read_csv(self._features_csv_filepath, dtype=dtypes)
 
-        # # set the 'Pos' field as index, after transpose it will be the column name
-        # self._log.debug('setting "Pos" field as index...')
-        # dask_df = dask_df.set_index('Pos')
+    #     # # set the 'Pos' field as index, after transpose it will be the column name
+    #     # self._log.debug('setting "Pos" field as index...')
+    #     # dask_df = dask_df.set_index('Pos')
 
-        # #return dask_df
-        # # convert to pandas dataframe
-        # self._log.debug('converting to pandas dataframe...')
-        # df = dask_df.compute()
-        self._log.debug('converted; shape=%s', df.shape)
+    #     # #return dask_df
+    #     # # convert to pandas dataframe
+    #     # self._log.debug('converting to pandas dataframe...')
+    #     # df = dask_df.compute()
+    #     self._log.debug('converted; shape=%s', df.shape)
 
-        # self._log.debug('transposing...')
-        # df = df.T
-        # self._log.debug('transposed; shape=%s', df.shape)
+    #     # self._log.debug('transposing...')
+    #     # df = df.T
+    #     # self._log.debug('transposed; shape=%s', df.shape)
 
-        return df
+    #     return df
 
-    def load_features_from_csv4(self):
-        # read floating point values as float32 and string 'Pos' field as pyarrow string
-        # dtypes = defaultdict(lambda: 'float32')
-        # dtypes['Pos'] = str(pd.StringDtype(storage='pyarrow'))
+    # def load_features_from_csv4(self):
+    #     # read floating point values as float32 and string 'Pos' field as pyarrow string
+    #     # dtypes = defaultdict(lambda: 'float32')
+    #     # dtypes['Pos'] = str(pd.StringDtype(storage='pyarrow'))
 
-        # load using dask
-        self._log.debug('loading "%s" using dask...',
-                        self._features_csv_filepath)
+    #     # load using dask
+    #     self._log.debug('loading "%s" using dask...',
+    #                     self._features_csv_filepath)
 
-        dask_df = dask_read_csv(self._features_csv_filepath)
-        return dask_df
+    #     dask_df = dask_read_csv(self._features_csv_filepath)
+    #     return dask_df
