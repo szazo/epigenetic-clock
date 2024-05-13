@@ -269,6 +269,7 @@ class GlmNetEpigeneticClockTrainer:
             xycoords='data',
             xytext=arrow_xytext_offset,
             textcoords='offset points',
+            fontsize=19,
             arrowprops=dict(arrowstyle='->',
                             connectionstyle='arc3',
                             color='red'))
