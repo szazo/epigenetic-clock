@@ -1,4 +1,15 @@
-# Setup
+# Assignment for Bioinformatics aspects of aging and rejuvenation
+
+Epigenetic clock assignments for *Bioinformatics aspects of aging and rejuvenation* lecture.
+
+Lecturer: Csaba Kerepesi
+
+* Assignment1: Train epigenetic clock for microarray-based methylation dataset
+* Assignment2: Train epigenetic clock for RRBS-based methylation dataset (with missing data)
+
+Bioinformatics aspects of aging and rejuvenation
+
+## Setup
 
 ## Creating and activating virtual env
 

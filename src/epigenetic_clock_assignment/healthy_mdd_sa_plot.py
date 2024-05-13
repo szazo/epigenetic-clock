@@ -5,22 +5,23 @@ import scipy.stats as scipystats
 from statannotations.Annotator import Annotator
 
 
-class HealthyMDDSABoxPlot:
+class HealthyMDDSAPlot:
 
     def age_histogram(self, df: pd.DataFrame):
-        fig, ax = plt.figure(), plt.gca()
+        fig, ax = plt.figure(figsize=(12, 10)), plt.gca()
 
         sns.histplot(ax=ax,
                      data=df,
                      x='age',
                      hue='Condition',
                      multiple='stack')
-        ax.set_xlabel('Age')
-        ax.set_title('Sample distribution by age')
+        ax.set_xlabel('Age', fontsize=14)
+        ax.set_ylabel('Count', fontsize=14)
+        ax.set_title('Age distribution by condition', fontsize=18)
         plt.show()
 
     def boxplot(self, df: pd.DataFrame, title):
-        fig, ax = plt.figure(), plt.gca()
+        fig, ax = plt.figure(figsize=(12, 10)), plt.gca()
 
         order = ['Healthy', 'MDD', 'SA']
         plotting_parameters = {
@@ -43,10 +44,6 @@ class HealthyMDDSABoxPlot:
             healthy_group['age_acceleration'], sa_group['age_acceleration'])
         mdd_vs_sa = scipystats.mannwhitneyu(mdd_group['age_acceleration'],
                                             sa_group['age_acceleration'])
-        # print('healthy_vs_mdd', healthy_vs_mdd)
-        # print('healthy_vs_sa', healthy_vs_sa)
-        # print('mdd_vs_sa', mdd_vs_sa)
-
         pairs = [('Healthy', 'MDD'), ('Healthy', 'SA'), ('MDD', 'SA')]
         annotator = Annotator(ax, pairs, **plotting_parameters)
         annotator.configure(text_format="simple",
@@ -54,6 +51,6 @@ class HealthyMDDSABoxPlot:
         annotator.set_pvalues(
             [healthy_vs_mdd.pvalue, healthy_vs_sa.pvalue, mdd_vs_sa.pvalue])
         annotator.annotate()
-        ax.set_title(title)
-        ax.set_ylabel('Age acceleration')
+        ax.set_title(title, fontsize=18)
+        ax.set_ylabel('Age acceleration', fontsize=14)
         plt.show()

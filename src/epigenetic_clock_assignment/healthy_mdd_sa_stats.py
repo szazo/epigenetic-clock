@@ -17,10 +17,6 @@ class HealthyMDDSAStats:
         meta_with_stats_df['age'] = y
         meta_with_stats_df['pred_age'] = y_pred
 
-        # print(meta_with_stats_df)
-
-        # print(meta_df.groupby('Condition').count())
-
         def check_normality(x: pd.Series):
             res = scipystats.shapiro(x)
             return res.pvalue > 0.05
@@ -75,7 +71,6 @@ class HealthyMDDSAStats:
         ]]
         #healthy_mdd_sa_merged = healthy_mdd_sa_merged.dropna()
         mdd_sa_healthy_merged = mdd_sa_healthy_merged.dropna()
-        print('mdd_sa_healthy_merged', mdd_sa_healthy_merged.shape)
 
         # merge back into one df
         controlled_dfs = []
@@ -97,32 +92,3 @@ class HealthyMDDSAStats:
         merged_controlled_dfs = pd.concat(controlled_dfs)
 
         return merged_controlled_dfs
-
-        healthy_mdd_sa_merged = pd.merge_asof(
-            left=healthy_mdd_merged.sort_values('age_healthy'),
-            right=sa_group.rename(
-                columns={
-                    'age': 'age_sa',
-                    'delta_age': 'delta_age_sa',
-                    'age_acceleration': 'age_acceleration_sa'
-                }).sort_values('age_sa'),
-            right_on='age_sa',
-            left_on='age_healthy',
-            direction='nearest',
-            tolerance=0)
-
-        # mdd_sa_merged = healthy_mdd_sa_merged[['age_healthy', 'age_mdd', 'age_sa',
-        #                                        'delta_age_healthy', 'delta_age_mdd', 'delta_age_sa',
-        #                                                'age_acceleration_healthy', 'age_acceleration_mdd', 'age_acceleration_sa']]
-        # healthy_mdd_sa_merged = healthy_mdd_sa_merged.dropna()
-
-        # healthy_mdd_merged = pd.merge_asof(
-        #     healthy_group.rename(columns={'age':'age_healthy'}).sort_values('age_healthy'),
-        #     mdd_group.rename(columns={'age':'age_mdd'}).sort_values('age_mdd'),
-        #     right_on='age_mdd', left_on='age_healthy',
-        #     suffixes=('_healthy', '_mdd'), direction='nearest', tolerance=tolerance_year)
-
-        return mdd_sa_merged
-
-
-# healthy_mdd_merged = healthy_mdd_merged.dropna()

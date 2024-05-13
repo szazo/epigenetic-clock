@@ -111,8 +111,6 @@ class GlmNetEpigeneticClockTrainer:
                 'nonzero_coefficient_count'] = self._count_nonzero_coefficients(
                     model)
 
-            print('STATS', train_stats)
-
             hyperparameter_stats = pd.concat(
                 (hyperparameter_stats, train_stats))
 
@@ -123,7 +121,6 @@ class GlmNetEpigeneticClockTrainer:
         best_index = np.argmax(hyperparameter_stats['cv_r2_mean'] -
                                self._std_error_weight_for_lambda_best *
                                hyperparameter_stats['cv_r2_std'])
-        print(best_index)
         best_row = hyperparameter_stats.iloc[best_index]
 
         result = HyperParameterOptimizationResult(
@@ -207,8 +204,8 @@ class GlmNetEpigeneticClockTrainer:
         #                       ylabel='DNAm age (years)')
 
         ax.set_title(title, fontsize=18)
-        ax.set_xlabel('Age (years)', fontsize=14)
-        ax.set_ylabel('DNAm age (years)', fontsize=14)
+        ax.set_xlabel('Age (years)', fontsize=16)
+        ax.set_ylabel('DNAm age (years)', fontsize=16)
         # sns.regplot(x=y_true,
         #             y=y_pred,
         #             ci=confidence_interval,
