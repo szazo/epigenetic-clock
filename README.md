@@ -11,7 +11,7 @@ Lecturer: [Csaba Kerepesi](https://kerepesi.web.elte.hu/)
 
 ### Creating and activating virtual env
 
-1. Create a *virtual env* which uses Python 3.9 (**replace** `VENV_DIR` e.g. to `~/.envs/bio`):
+1. Create a *virtual env* which uses Python 3.8 (**replace** `VENV_DIR` e.g. to `~/.envs/bio`):
     ```bash
     pyenv install 3.8
     pyenv shell 3.8
@@ -45,9 +45,9 @@ Run the jupyter notebooks using `bio` kernel.
 
 ### Other goodies
 
-## Tips for development
+#### Tips for development
 
-### Uninstall all packages (and purge pip cache)
+##### Uninstall all packages (and purge pip cache)
 
 ```
 pip uninstall epigenetic_clock_assignment
