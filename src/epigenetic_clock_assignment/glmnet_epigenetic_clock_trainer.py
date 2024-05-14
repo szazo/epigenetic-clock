@@ -1,4 +1,5 @@
 import logging
+import gc
 from dataclasses import dataclass
 from typing import Optional, Union, Tuple, List
 from functools import partial
@@ -115,6 +116,7 @@ class GlmNetEpigeneticClockTrainer:
                 (hyperparameter_stats, train_stats))
 
             models.append(model)
+            gc.collect()
 
         # select best row based on r2_mean and self._std_error_weight_for_lambda_best * r2_std
         # note: the first is enough, because the dataframe also contains lambda_path
@@ -245,8 +247,8 @@ class GlmNetEpigeneticClockTrainer:
         ax.set_title(
             'Hyperparameter optimization result on training data\n' +
             'best is selected based on ' +
-            f' $(CV\\ R^2\\ mean) - {self._std_error_weight_for_lambda_best}\\cdot(CV\\ R^2\\ std)$'
-        )
+            f' $(CV\\ R^2\\ mean) - {self._std_error_weight_for_lambda_best}\\cdot(CV\\ R^2\\ std)$',
+            fontsize=18)
         ax.set_xlabel('$log(\\lambda)$')
         ax.set_ylabel('$\\alpha$')
         L = ax.legend()
@@ -269,7 +271,7 @@ class GlmNetEpigeneticClockTrainer:
             xycoords='data',
             xytext=arrow_xytext_offset,
             textcoords='offset points',
-            fontsize=19,
+            fontsize=15,
             arrowprops=dict(arrowstyle='->',
                             connectionstyle='arc3',
                             color='red'))

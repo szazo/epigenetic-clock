@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as scipystats
+from sigfig import sigfig
 from statannotations.Annotator import Annotator
 
 
@@ -30,7 +31,7 @@ class HealthyMDDSAPlot:
             'order': order
         }
 
-        sns.boxplot(ax=ax, **plotting_parameters)
+        box_plot = sns.boxplot(ax=ax, **plotting_parameters)
 
         # comparison statistics
         condition_groupby = df.groupby('Condition')
@@ -53,4 +54,16 @@ class HealthyMDDSAPlot:
         annotator.annotate()
         ax.set_title(title, fontsize=18)
         ax.set_ylabel('Age acceleration', fontsize=14)
+
+        medians = condition_groupby['age_acceleration'].median()
+        vertical_offsets = 0.04  #df['age_acceleration'].median() * 0.005
+        for xtick in box_plot.get_xticks():
+            box_plot.text(xtick,
+                          medians[xtick] + vertical_offsets,
+                          sigfig.round(medians[xtick], sigfigs=3),
+                          horizontalalignment='center',
+                          size='x-small',
+                          color='w',
+                          weight='semibold')
+
         plt.show()
