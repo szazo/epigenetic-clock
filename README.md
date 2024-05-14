@@ -4,8 +4,10 @@
 
 Lecturer: [Csaba Kerepesi](https://kerepesi.web.elte.hu/)
 
-* Assignment1: Train epigenetic clock for microarray-based methylation dataset
-* Assignment2: Train epigenetic clock for RRBS-based methylation dataset (with missing data)
+* Assignment 1: Train epigenetic clock for microarray-based methylation dataset
+* Assignment 2: Train epigenetic clock for RRBS-based methylation dataset (with missing data)
+
+Presentation: https://github.com/szazo/epigenetic-clock/blob/main/docs/epigenetic_clock_assignment.pdf
 
 ## Development
 
