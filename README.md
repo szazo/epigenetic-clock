@@ -42,7 +42,13 @@ Presentation: [epigenetic_clock_assignment.pdf](docs/epigenetic_clock_assignment
 
 ### Running
 
-Run the jupyter notebooks using `bio` kernel.
+1. Start jupyter lab:
+    ```bash
+    jupyter lab
+    ```
+2. Run the jupyter notebooks using `bio` kernel:
+  * `assignment1_microarray.ipynb`
+  * `assignment2_rrbs.ipynb`
 
 
 ### Other goodies

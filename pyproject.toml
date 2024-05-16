@@ -45,8 +45,6 @@ path = "src/epigenetic_clock_assignment/__about__.py"
 dev = [
     "ipykernel ~= 6.29.4",
     "pyright ~= 1.1.360",
-    "pre-commit ~= 3.5.0"
-    # "pyright ~= 1.1.357",
-    # "pre-commit ~= 3.7.0"
-    # "jupyterlab"
+    "pre-commit ~= 3.5.0",
+    "jupyterlab"
 ]
