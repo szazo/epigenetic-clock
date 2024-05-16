@@ -100,8 +100,7 @@ class GlmNetEpigeneticClockTrainer:
             train_stats['cv_r2_mean_path'] = model.cv_mean_score_
             train_stats['cv_r2_std_path'] = model.cv_standard_error_
             # single parameters
-            train_stats['lambda'] = model.lambda_best_[
-                0]  #3. #model.lambda_path_
+            train_stats['lambda'] = model.lambda_best_[0]
             train_stats['alpha'] = alpha
             train_stats['cv_r2_mean'] = model.cv_mean_score_[
                 model.lambda_best_inx_][0]
@@ -201,21 +200,9 @@ class GlmNetEpigeneticClockTrainer:
 
         sns.scatterplot(x=y_true, y=y_pred, ax=ax, hue=hue, style=style)
 
-        #.set(title=title,
-        #                       xlabel='Age (years)',
-        #                       ylabel='DNAm age (years)')
-
         ax.set_title(title, fontsize=18)
         ax.set_xlabel('Age (years)', fontsize=16)
         ax.set_ylabel('DNAm age (years)', fontsize=16)
-        # sns.regplot(x=y_true,
-        #             y=y_pred,
-        #             ci=confidence_interval,
-        #             fit_reg=True,
-        #             n_boot=n_boots,
-        #             ax=ax).set(title=title,
-        #                        xlabel='Age (years)',
-        #                        ylabel='DNAm age (years)')
 
         regression_line_y = y_true * stats.slope + stats.intercept
 
